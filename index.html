@@ -187,7 +187,7 @@
     // ...你的原本 JS 全部照貼...
     // (此處省略，請保留你原本的 JS 內容)
   </script>
-  <!-- 這裡是 Firebase + LINE 登入 + 白名單驗證 -->
+  <!-- 這裡是 Firebase + LINE 登入 + 白名單驗證 + 顯示 userId -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
@@ -223,6 +223,9 @@
     // 監聽登入狀態
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // 這裡加 alert 直接顯示 userId
+        alert('你的 LINE userId: ' + user.providerData[0].uid);
+
         // 取得 LINE userId
         const lineId = user.providerData[0].uid;
         // 查詢 Firestore 的 whitelist
