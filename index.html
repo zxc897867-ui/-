@@ -2,230 +2,259 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>房屋資訊自動生成器</title>
+  <title>凱燕不動產</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     body { font-family: "微軟正黑體", Arial, sans-serif; margin: 30px; }
     label { display: block; margin: 8px 0 2px; }
-    input[type="text"], select, textarea { width: 100%; box-sizing: border-box; }
-    input[type="radio"] { width: auto; margin-right: 4px; vertical-align: middle; }
-    .radio-group label { margin-right: 16px; font-weight: normal; display: inline-block; }
-    .radio-group input[type="text"] { width: 120px; margin-left: 4px; }
-    input[type="radio"]:checked { accent-color: orange; }
-    textarea { margin-top: 10px; height: 350px; }
+    input[type="text"], select, textarea { box-sizing: border-box; font-size: 16px; }
+    input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"], textarea, select {
+      font-size: 16px !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      -webkit-text-size-adjust: 100% !important;
+      -moz-text-size-adjust: 100% !important;
+      -ms-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
+      transform-origin: left top !important;
+      -webkit-transform-origin: left top !important;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      outline: none !important;
+      resize: none !important;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="search"]:focus, input[type="tel"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
+      -webkit-transform: scale(1) !important;
+      transform: scale(1) !important;
+      zoom: 1 !important;
+      font-size: 16px !important;
+    }
+    @media screen and (max-width: 768px) {
+      input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"], textarea, select {
+        font-size: 16px !important;
+        -webkit-transform: scale(1) !important;
+        transform: scale(1) !important;
+        zoom: 1 !important;
+        max-width: none !important;
+      }
+      input[type="text"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="search"]:focus, input[type="tel"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
+        -webkit-transform: scale(1) !important;
+        transform: scale(1) !important;
+        zoom: 1 !important;
+        font-size: 16px !important;
+      }
+    }
+    input[type="radio"], input[type="checkbox"] { margin-right: 4px; margin-left: 0; vertical-align: middle; }
+    .auto-grow { min-width: 120px; width: auto; max-width: 60vw; transition: width 0.2s; }
+    .square-textarea { width: 200px; height: 200px; resize: both; font-size: 16px; box-sizing: border-box; display: block; }
+    .small-input { width: 25px !important; height: 25px; text-align: center; font-size: 14px; padding: 2px; min-width: 25px !important; max-width: 25px !important; }
+    input[type="radio"]:checked, input[type="checkbox"]:checked { accent-color: orange; }
+    textarea { margin-top: 10px; width: 100%; font-size: 18px; }
     button { margin: 10px 5px 0 0; padding: 8px 16px; }
-    .row { display: flex; gap: 10px; }
-    .row label, .row input { flex: 1; }
+    .row { display: flex; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; }
+    .row label { margin: 0 4px 0 0; font-weight: bold; display: inline-block; white-space: nowrap; }
+    .inline-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+    }
+    .inline-options label {
+      display: flex;
+      align-items: center;
+      margin-right: 0;
+      font-weight: normal;
+      white-space: nowrap;
+      font-size: 16px;
+    }
+    .inline-options input[type="radio"] {
+      margin-right: 4px;
+    }
+    @media (max-width: 768px) {
+      .row label {
+        min-width: auto;
+        margin-right: 2px;
+      }
+      .inline-options {
+        gap: 6px 12px;
+      }
+      .inline-options label {
+        font-size: 14px;
+      }
+    }
+    #date { width: 140px; max-width: 40vw; height: 36px; border-radius: 4px; font-size: 16px; padding: 4px 8px; margin-right: 10px; }
+    #today_obj { width: 150px; max-width: 35vw; height: 36px; border-radius: 4px; font-size: 16px; padding: 4px 8px; }
+    .ocr-section {
+      background: #f8f9fa;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    .ocr-title { font-weight: bold; color: #333; margin-bottom: 10px; font-size: 16px; }
+    .ocr-subtitle { color: #666; font-size: 14px; margin-bottom: 10px; }
+    #deedImg { margin: 10px 0; font-size: 14px; }
+    #ocrResult { font-size:13px;color:#888;word-break:break-all; margin-top: 10px; text-align: left; max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd; }
+    .hidden { display: none; }
+    #pwbox {
+      max-width: 350px;
+      margin: 80px auto 0 auto;
+      padding: 32px 24px 24px 24px;
+      background: #f8f8f8;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px #0001;
+      text-align: center;
+    }
+    #pwbox h2 {
+      font-size: 1.6em;
+      margin-bottom: 24px;
+      letter-spacing: 2px;
+    }
+    #pwinput {
+      font-size: 20px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      margin-bottom: 12px;
+      width: 80%;
+      max-width: 220px;
+      outline: none;
+    }
+    #pwbtn {
+      font-size: 18px;
+      padding: 8px 24px;
+      border-radius: 6px;
+      border: none;
+      background: #2d7be5;
+      color: #fff;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    #pwmsg {
+      color: #d00;
+      margin-top: 10px;
+      min-height: 22px;
+      font-size: 15px;
+    }
   </style>
 </head>
 <body>
-  <h2>房屋資訊自動生成器</h2>
-  <form id="houseForm" autocomplete="off">
-    <div class="row">
-      <label>日期（自動產生）</label>
-      <input name="date" id="date" readonly>
-    </div>
-    <label>可否廣告：
-      <span class="radio-group">
-        <label><input type="radio" name="ad" value="可" checked>可</label>
-        <label><input type="radio" name="ad" value="不可">不可</label>
-        <label><input type="radio" name="ad" value="其他" id="ad_other_radio">其他</label>
-        <input type="text" id="ad_other_text" name="ad_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>可否簽委托書：
-      <span class="radio-group">
-        <label><input type="radio" name="sign" value="可" checked>可</label>
-        <label><input type="radio" name="sign" value="不可">不可</label>
-        <label><input type="radio" name="sign" value="其他" id="sign_other_radio">其他</label>
-        <input type="text" id="sign_other_text" name="sign_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>地址：<input name="address" required></label>
-    <label>如為頂加是否為民國84年前增建：
-      <span class="radio-group">
-        <label><input type="radio" name="top" value="不適用" checked>不適用</label>
-        <label><input type="radio" name="top" value="是">是</label>
-        <label><input type="radio" name="top" value="否">否</label>
-        <label><input type="radio" name="top" value="其他" id="top_other_radio">其他</label>
-        <input type="text" id="top_other_text" name="top_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>房號：<input name="room" required></label>
-    <label>總樓層：<input name="floor" required></label>
-    <label>建物型態：<input name="type" required></label>
-    <label>坪數：<input name="area" required></label>
-    <label>格局：<input name="layout" required></label>
-    <label>租金：<input name="rent" required></label>
-    <label>管理費：<input name="fee" required></label>
-    <label>底價：<input name="base" required></label>
-    <label>報稅：
-      <span class="radio-group">
-        <label><input type="radio" name="tax" value="是" checked>是</label>
-        <label><input type="radio" name="tax" value="否">否</label>
-        <label><input type="radio" name="tax" value="其他" id="tax_other_radio">其他</label>
-        <input type="text" id="tax_other_text" name="tax_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>租補：
-      <span class="radio-group">
-        <label><input type="radio" name="subsidy" value="可" checked>可</label>
-        <label><input type="radio" name="subsidy" value="否">否</label>
-        <label><input type="radio" name="subsidy" value="其他" id="subsidy_other_radio">其他</label>
-        <input type="text" id="subsidy_other_text" name="subsidy_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>入籍：
-      <span class="radio-group">
-        <label><input type="radio" name="register" value="可" checked>可</label>
-        <label><input type="radio" name="register" value="否">否</label>
-        <label><input type="radio" name="register" value="其他" id="register_other_radio">其他</label>
-        <input type="text" id="register_other_text" name="register_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>寵物：
-      <span class="radio-group">
-        <label><input type="radio" name="pet" value="否" checked>否</label>
-        <label><input type="radio" name="pet" value="可">可</label>
-        <label><input type="radio" name="pet" value="可貓">可貓</label>
-        <label><input type="radio" name="pet" value="可狗">可狗</label>
-        <label><input type="radio" name="pet" value="其他" id="pet_other_radio">其他</label>
-        <input type="text" id="pet_other_text" name="pet_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>垃圾代收：
-      <span class="radio-group">
-        <label><input type="radio" name="garbage" value="有" checked>有</label>
-        <label><input type="radio" name="garbage" value="無">無</label>
-        <label><input type="radio" name="garbage" value="其他" id="garbage_other_radio">其他</label>
-        <input type="text" id="garbage_other_text" name="garbage_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>停車位：
-      <span class="radio-group">
-        <label><input type="radio" name="parking" value="有" checked>有</label>
-        <label><input type="radio" name="parking" value="無">無</label>
-        <label><input type="radio" name="parking" value="其他" id="parking_other_radio">其他</label>
-        <input type="text" id="parking_other_text" name="parking_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>公設：
-      <span class="radio-group">
-        <label><input type="radio" name="public" value="有" checked>有</label>
-        <label><input type="radio" name="public" value="無">無</label>
-        <label><input type="radio" name="public" value="其他" id="public_other_radio">其他</label>
-        <input type="text" id="public_other_text" name="public_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>電費$/度：<input name="electric" required></label>
-    <label>水費：<input name="water" required></label>
-    <label>瓦斯：<input name="gas" required></label>
-    <label>鄰近交通(站點/分鐘)：<input name="traffic" required></label>
-    <label>帶看方式：
-      <span class="radio-group">
-        <label><input type="radio" name="show" value="約看" checked>約看</label>
-        <label><input type="radio" name="show" value="現場有鑰匙">現場有鑰匙</label>
-        <label><input type="radio" name="show" value="屋主帶看">屋主帶看</label>
-        <label><input type="radio" name="show" value="其他" id="show_other_radio">其他</label>
-        <input type="text" id="show_other_text" name="show_other" placeholder="請輸入其他內容" style="display:none;">
-      </span>
-    </label>
-    <label>附加設備：<input name="equip" required></label>
-    <label>注意事項(生活機能、東服等補充)：<input name="note" required></label>
-    <label>開發：<input name="dev" required></label>
-    <button type="button" onclick="generate()">產生格式</button>
-    <button type="button" onclick="copyText()">複製內容</button>
-  </form>
-  <textarea id="output" readonly placeholder="這裡會自動產生格式內容"></textarea>
-
+  <!-- 密碼登入區塊 -->
+  <div id="pwbox">
+    <h2>凱燕不動產</h2>
+    <input type="password" id="pwinput" placeholder="請輸入密碼">
+    <button id="pwbtn" onclick="checkPW()">進入</button>
+    <div id="pwmsg"></div>
+    <hr style="margin:24px 0;">
+    <button id="lineLoginBtn" style="font-size:18px;background:#06c755;color:#fff;padding:10px 24px;border:none;border-radius:6px;cursor:pointer;">
+      用 LINE 登入
+    </button>
+  </div>
+  <!-- 表單內容區塊，預設隱藏 -->
+  <div id="maincontent" style="display:none;">
+    <h2>房屋資訊自動生成器</h2>
+    <!-- 你的表單內容從這裡開始，全部照貼即可 -->
+    <!-- ...（此處省略，請保留你原本的表單內容）... -->
+    <!-- 你原本的表單內容全部照貼 -->
+    <!-- ...你的表單內容... -->
+  </div>
   <script>
-    // 自動產生民國日期
-    function getTaiwanDate() {
-      const today = new Date();
-      const year = today.getFullYear() - 1911;
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}/${month}/${day}`;
-    }
-    document.getElementById('date').value = getTaiwanDate();
-
-    // 控制「其他」輸入框顯示
-    const radioFields = [
-      'ad', 'sign', 'top', 'tax', 'subsidy', 'register', 'pet', 'garbage', 'parking', 'public', 'show'
-    ];
-    radioFields.forEach(function(field) {
-      const otherRadio = document.getElementById(`${field}_other_radio`);
-      const otherText = document.getElementById(`${field}_other_text`);
-      // 頁面載入時預設隱藏
-      if (otherText) otherText.style.display = 'none';
-      document.querySelectorAll(`input[name="${field}"]`).forEach(function(radio) {
-        radio.addEventListener('change', function() {
-          if (otherRadio && otherText) {
-            if (otherRadio.checked) {
-              otherText.style.display = '';
-              otherText.focus();
-            } else {
-              otherText.style.display = 'none';
-              otherText.value = '';
-            }
-          }
-        });
-      });
-    });
-
-    // 取得 radio 欄位值（含其他）
-    function getRadioValue(field) {
-      const checked = document.querySelector(`input[name="${field}"]:checked`);
-      if (!checked) return '';
-      if (checked.value === '其他') {
-        const otherText = document.getElementById(`${field}_other_text`);
-        return otherText && otherText.value ? otherText.value : '其他';
+    // 密碼驗證
+    function checkPW() {
+      var pw = document.getElementById('pwinput').value;
+      if(pw === '9070') {
+        document.getElementById('pwbox').style.display = 'none';
+        document.getElementById('maincontent').style.display = '';
+        setTimeout(function(){
+          var firstInput = document.querySelector('#maincontent input, #maincontent textarea');
+          if(firstInput) firstInput.focus();
+        }, 100);
+      } else {
+        document.getElementById('pwmsg').innerText = '密碼錯誤，請再試一次';
       }
-      return checked.value;
     }
+    document.getElementById('pwinput').addEventListener('keydown', function(e){
+      if(e.key === 'Enter') checkPW();
+    });
+    window.onload = function() {
+      document.getElementById('maincontent').style.display = 'none';
+    }
+  </script>
+  <script>
+    // ...你的原本 JS 全部照貼...
+    // (此處省略，請保留你原本的 JS 內容)
+  </script>
+  <!-- 這裡是 Firebase + LINE 登入 + 白名單驗證 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-    // 產生格式內容
-    function generate() {
-      const form = document.getElementById('houseForm');
-      const data = new FormData(form);
-      let output =
-        `日期：${data.get('date')}\n` +
-        `可否廣告：${getRadioValue('ad')}\n` +
-        `可否簽委托書：${getRadioValue('sign')}\n` +
-        `地址：${data.get('address')}\n` +
-        `如為頂加是否為民國84年前增建：${getRadioValue('top')}\n` +
-        `房號：${data.get('room')}\n` +
-        `總樓層：${data.get('floor')}\n` +
-        `建物型態：${data.get('type')}\n` +
-        `坪數：${data.get('area')}\n` +
-        `格局：${data.get('layout')}\n` +
-        `租金：${data.get('rent')}\n` +
-        `管理費：${data.get('fee')}\n` +
-        `底價：${data.get('base')}\n` +
-        `報稅：${getRadioValue('tax')}\n` +
-        `租補：${getRadioValue('subsidy')}\n` +
-        `入籍：${getRadioValue('register')}\n` +
-        `寵物：${getRadioValue('pet')}\n` +
-        `垃圾代收：${getRadioValue('garbage')}\n` +
-        `停車位：${getRadioValue('parking')}\n` +
-        `公設：${getRadioValue('public')}\n` +
-        `電費$/度：${data.get('electric')}\n` +
-        `水費：${data.get('water')}\n` +
-        `瓦斯：${data.get('gas')}\n` +
-        `鄰近交通(站點/分鐘)：${data.get('traffic')}\n` +
-        `帶看方式：${getRadioValue('show')}\n` +
-        `附加設備：${data.get('equip')}\n` +
-        `注意事項(生活機能、東服等補充)：${data.get('note')}\n` +
-        `開發：${data.get('dev')}`;
-      document.getElementById('output').value = output;
-    }
+    // 你的 Firebase 設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5h8IedyM9oYt3y1VkoNkcYsAqq4yLRDk",
+      authDomain: "kaiyan-real-estate.firebaseapp.com",
+      projectId: "kaiyan-real-estate",
+      storageBucket: "kaiyan-real-estate.appspot.com",
+      messagingSenderId: "361523904560",
+      appId: "1:361523904560:web:14f12a49a1b386b51dadf5",
+      measurementId: "G-Z24BQWYZ9W"
+    };
 
-    // 複製內容到剪貼簿
-    function copyText() {
-      const output = document.getElementById('output');
-      output.select();
-      document.execCommand('copy');
-      alert('已複製到剪貼簿！');
-    }
+    // 初始化
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // LINE OIDC 登入
+    document.getElementById('lineLoginBtn').onclick = async function() {
+      const provider = new OAuthProvider('oidc.line');
+      try {
+        await signInWithPopup(auth, provider);
+        // 登入成功後會自動觸發 onAuthStateChanged
+      } catch (error) {
+        alert('LINE 登入失敗：' + error.message);
+      }
+    };
+
+    // 監聽登入狀態
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // 取得 LINE userId
+        const lineId = user.providerData[0].uid;
+        // 查詢 Firestore 的 whitelist
+        const docRef = doc(db, "whitelist", lineId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          // 通過白名單，顯示主頁
+          document.getElementById('pwbox').style.display = 'none';
+          document.getElementById('maincontent').style.display = '';
+          // 加水印
+          let name = user.displayName || 'LINE用戶';
+          let now = new Date().toLocaleString();
+          let watermark = document.createElement('div');
+          watermark.innerText = `${name} | ${now}`;
+          watermark.style.position = 'fixed';
+          watermark.style.bottom = '10px';
+          watermark.style.right = '10px';
+          watermark.style.opacity = '0.5';
+          watermark.style.fontSize = '13px';
+          watermark.style.zIndex = '9999';
+          document.body.appendChild(watermark);
+        } else {
+          // 不在白名單，登出
+          await signOut(auth);
+          alert('此 LINE 帳號未授權使用');
+        }
+      } else {
+        // 尚未登入，顯示登入頁
+        document.getElementById('pwbox').style.display = '';
+        document.getElementById('maincontent').style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
