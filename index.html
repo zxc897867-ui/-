@@ -14,10 +14,36 @@
     gtag('config', 'G-TG3GW6YQSK');
   </script>
   
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
+    // Firebase 設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5h8IedyM9oYt3y1VkoNkcYsAqq4yLRDk",
+      authDomain: "kaiyan-real-estate.firebaseapp.com",
+      projectId: "kaiyan-real-estate",
+      storageBucket: "kaiyan-real-estate.appspot.com",
+      messagingSenderId: "361523904560",
+      appId: "1:361523904560:web:14f12a49a1b386b51dadf5",
+      measurementId: "G-Z24BQWYZ9W"
+    };
+
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // 將 auth 和 db 設為全域變數
+    window.auth = auth;
+    window.db = db;
+  </script>
+  
   <!-- Tesseract.js for OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  
-  <style>
+    <style>
     body { font-family: "微軟正黑體", Arial, sans-serif; margin: 30px; }
     label { display: block; margin: 8px 0 2px; }
     input[type="text"], select, textarea { box-sizing: border-box; font-size: 16px; }
@@ -159,7 +185,7 @@
   <div id="pwbox">
     <h2>凱燕不動產</h2>
     <input type="password" id="pwinput" placeholder="請輸入密碼">
-    <button id="pwbtn" onclick="checkPW()">進入</button>
+    <button id="pwbtn">進入</button>
     <div id="pwmsg"></div>
     <hr style="margin:24px 0;">
     <button id="lineLoginBtn" style="font-size:18px;background:#06c755;color:#fff;padding:10px 24px;border:none;border-radius:6px;cursor:pointer;">
@@ -314,7 +340,6 @@
     </form>
     <textarea id="output" readonly placeholder="這裡會自動產生格式內容" oninput="autoGrow(this)"></textarea>
   </div>
-
   <script>
     // 密碼驗證
     function checkPW() {
@@ -330,14 +355,21 @@
         document.getElementById('pwmsg').innerText = '密碼錯誤，請再試一次';
       }
     }
+
+    // 監聽密碼輸入框的 Enter 鍵
     document.getElementById('pwinput').addEventListener('keydown', function(e){
       if(e.key === 'Enter') checkPW();
     });
+
+    // 監聽密碼按鈕點擊
+    document.getElementById('pwbtn').addEventListener('click', checkPW);
+
+    // 頁面載入時隱藏主內容
     window.onload = function() {
       document.getElementById('maincontent').style.display = 'none';
     }
 
-    // OCR比對功能
+    // OCR相關函數
     function toChineseNumber(n) {
       const map = ['零','一','二','三','四','五','六','七','八','九'];
       if (n === 100) return '一百';
@@ -354,6 +386,7 @@
         return toChineseNumber(parseInt(p1)) + '樓';
       });
     }
+
     function chineseNumberToNum(ch) {
       const map = {'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
       if (ch === '十') return 10;
@@ -363,15 +396,18 @@
       if (ch.length === 3 && ch[1] === '十') return map[ch[0]] * 10 + map[ch[2]];
       return map[ch] || ch;
     }
+
     function chineseToNum(str) {
       return str.replace(/([一二三四五六七八九十百]+)樓/g, function(match, p1) {
         return chineseNumberToNum(p1) + '樓';
       });
     }
+
     function normalizeAddress(str) {
       return str.replace(/[\s,，。．、:：\-—_()（）]/g, '')
                 .replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 65248));
     }
+
     function addressMatch(formAddr, deedAddr) {
       const f = normalizeAddress(formAddr);
       const d = normalizeAddress(deedAddr);
@@ -390,6 +426,7 @@
         fChineseToNum.endsWith(dChineseToNum)
       );
     }
+
     async function ocrAndCompare() {
       const file = document.getElementById('deedImg').files[0];
       if (!file) return alert('請先上傳照片');
@@ -403,7 +440,6 @@
       document.getElementById('ocrResult').innerText = '辨識中...';
       const { data: { text } } = await Tesseract.recognize(file, 'chi_tra');
       document.getElementById('ocrResult').innerText = text;
-
       let deedAddress = '';
       let deedFloor = '';
       let deedLevel = '';
@@ -468,12 +504,6 @@
       const room = document.querySelector('input[name="layout_room"]').value;
       const living = document.querySelector('input[name="layout_living"]').value;
       const bath = document.querySelector('input[name="layout_bath"]').value;
-      const kitchen = document.querySelector('input[name="layout_kitchen"]').value
-    function getLayoutValue() {
-      const items = [];
-      const room = document.querySelector('input[name="layout_room"]').value;
-      const living = document.querySelector('input[name="layout_living"]').value;
-      const bath = document.querySelector('input[name="layout_bath"]').value;
       const kitchen = document.querySelector('input[name="layout_kitchen"]').value;
       const balcony = document.querySelector('input[name="layout_balcony"]').value;
       if (room) items.push(`${room}房`);
@@ -488,7 +518,6 @@
       if (options.length) items.push(options.join('、'));
       return items.join('');
     }
-
     function generate() {
       const data = new FormData(document.getElementById('houseForm'));
       let output =
@@ -522,6 +551,15 @@
         `開發：${data.get('dev') || ''}`;
       document.getElementById('output').value = output;
       autoGrow(document.getElementById('output'));
+
+      // 追蹤表單提交
+      if (typeof gtag === 'function' && auth.currentUser) {
+        gtag('event', 'form_submit', {
+          'user_id': auth.currentUser.providerData[0].uid,
+          'user_name': auth.currentUser.displayName,
+          'form_type': 'house_info'
+        });
+      }
     }
 
     function copyText() {
@@ -554,12 +592,14 @@
       span.textContent = input.value || input.placeholder || '';
       input.style.width = Math.max(120, span.offsetWidth + 20) + 'px';
     }
+
     document.querySelectorAll('.auto-grow').forEach(function(input) {
       input.addEventListener('input', function() {
         adjustInputWidth(this);
       });
       adjustInputWidth(input);
     });
+
     document.querySelectorAll('input[type="text"]').forEach(function(input) {
       input.addEventListener('input', function() {
         adjustInputWidth(this);
@@ -577,6 +617,7 @@
         note.value = '';
       }
     }
+
     function toggleGarbageNote(radio) {
       var note = document.getElementById('garbage_note');
       if (radio.value === '有' && radio.checked) {
@@ -588,125 +629,5 @@
       }
     }
   </script>
-
-  <!-- Firebase + LINE 登入 + 白名單驗證 + GA4事件 -->
-  <script type="module">
-     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-    // Firebase 設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyC5h8IedyM9oYt3y1VkoNkcYsAqq4yLRDk",
-      authDomain: "kaiyan-real-estate.firebaseapp.com",
-      projectId: "kaiyan-real-estate",
-      storageBucket: "kaiyan-real-estate.appspot.com",
-      messagingSenderId: "361523904560",
-      appId: "1:361523904560:web:14f12a49a1b386b51dadf5",
-      measurementId: "G-Z24BQWYZ9W"
-    };
-
-    // 初始化
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // LINE OIDC 登入
-    document.getElementById('lineLoginBtn').onclick = async function() {
-      const provider = new OAuthProvider('oidc.line');
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (error) {
-        alert('LINE 登入失敗：' + error.message);
-      }
-    };
-
-    // 監聽登入狀態
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const lineId = user.providerData[0].uid;
-        const docRef = doc(db, "whitelist", lineId);
-        const docSnap = await getDoc(docRef);
-        let name = '';
-        if (docSnap.exists()) {
-          name = docSnap.data().name || '';
-          
-          // Google Analytics 事件追蹤
-          if (typeof gtag === 'function') {
-            // 登入成功事件
-            gtag('event', 'login_success', {
-              'user_id': lineId,
-              'user_name': name
-            });
-            
-            // 設定使用者屬性
-            gtag('set', 'user_properties', {
-              'employee_name': name,
-              'employee_id': lineId
-            });
-          }
-          
-          // 通過白名單，顯示主頁
-          document.getElementById('pwbox').style.display = 'none';
-          document.getElementById('maincontent').style.display = '';
-          
-          // 加水印
-          let displayName = user.displayName || 'LINE用戶';
-          let now = new Date().toLocaleString();
-          let watermark = document.createElement('div');
-          watermark.innerText = `${displayName} | ${now}`;
-          watermark.style.position = 'fixed';
-          watermark.style.bottom = '10px';
-          watermark.style.right = '10px';
-          watermark.style.opacity = '0.5';
-          watermark.style.fontSize = '13px';
-          watermark.style.zIndex = '9999';
-          document.body.appendChild(watermark);
-          
-          // 修改 generate 和 ocrAndCompare 函數以加入追蹤
-          window.generate = function() {
-            const data = new FormData(document.getElementById('houseForm'));
-            let output = `${data.get('date')} 今日物件${data.get('today_obj') ? ' ' + data.get('today_obj') : ''}\n業務代租進件格式如下\n` +
-              // ... (原有的輸出格式程式碼保持不變)
-            
-            document.getElementById('output').value = output;
-            autoGrow(document.getElementById('output'));
-            
-            // 追蹤表單提交
-            if (typeof gtag === 'function') {
-              gtag('event', 'form_submit', {
-                'user_id': lineId,
-                'user_name': name,
-                'form_type': 'house_info'
-              });
-            }
-          };
-          
-          window.ocrAndCompare = async function() {
-            const file = document.getElementById('deedImg').files[0];
-            if (!file) return alert('請先上傳照片');
-            
-            // 追蹤 OCR 功能使用
-            if (typeof gtag === 'function') {
-              gtag('event', 'feature_use', {
-                'user_id': lineId,
-                'user_name': name,
-                'feature_name': 'ocr_compare'
-              });
-            }
-            
-            // ... (原有的 OCR 程式碼保持不變)
-          };
-          
-        } else {
-          await signOut(auth);
-          alert('此 LINE 帳號未授權使用');
-        }
-      } else {
-        document.getElementById('pwbox').style.display = '';
-        document.getElementById('maincontent').style.display = 'none';
-      }
-    });
-</script>
 </body>
 </html>
