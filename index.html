@@ -591,11 +591,9 @@
 
   <!-- Firebase + LINE 登入 + 白名單驗證 + GA4事件 -->
   <script type="module">
-   <!-- Firebase + LINE 登入 + 白名單驗證 + GA4事件 -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
     // Firebase 設定
     const firebaseConfig = {
@@ -616,13 +614,10 @@
     // LINE OIDC 登入
     document.getElementById('lineLoginBtn').onclick = async function() {
       const provider = new OAuthProvider('oidc.line');
-      provider.setCustomParameters({
-        prompt: 'consent'
-      });
       try {
         await signInWithPopup(auth, provider);
+        // 登入成功後會自動觸發 onAuthStateChanged
       } catch (error) {
-        console.error('LINE 登入錯誤:', error);
         alert('LINE 登入失敗：' + error.message);
       }
     };
@@ -630,31 +625,24 @@
     // 監聽登入狀態
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // 取得 LINE userId
         const lineId = user.providerData[0].uid;
+        // 查詢 Firestore 的 whitelist
         const docRef = doc(db, "whitelist", lineId);
         const docSnap = await getDoc(docRef);
         let name = '';
         if (docSnap.exists()) {
           name = docSnap.data().name || '';
-          
-          // Google Analytics 事件追蹤
+          // Google Analytics 送出登入成功事件
           if (typeof gtag === 'function') {
             gtag('event', 'login_success', {
               'user_id': lineId,
               'user_name': name
             });
-            
-            // 設定使用者屬性
-            gtag('set', 'user_properties', {
-              'employee_name': name,
-              'employee_id': lineId
-            });
           }
-          
           // 通過白名單，顯示主頁
           document.getElementById('pwbox').style.display = 'none';
           document.getElementById('maincontent').style.display = '';
-          
           // 加水印
           let displayName = user.displayName || 'LINE用戶';
           let now = new Date().toLocaleString();
@@ -667,22 +655,17 @@
           watermark.style.fontSize = '13px';
           watermark.style.zIndex = '9999';
           document.body.appendChild(watermark);
-          
-          // 將使用者資訊存為全域變數供其他函數使用
-          window.currentUser = {
-            lineId: lineId,
-            name: name
-          };
-          
         } else {
+          // 不在白名單，登出
           await signOut(auth);
           alert('此 LINE 帳號未授權使用');
         }
       } else {
+        // 尚未登入，顯示登入頁
         document.getElementById('pwbox').style.display = '';
         document.getElementById('maincontent').style.display = 'none';
       }
     });
-</script>
+  </script>
 </body>
 </html>
