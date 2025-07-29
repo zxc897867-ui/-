@@ -591,7 +591,7 @@
 
   <!-- Firebase + LINE 登入 + 白名單驗證 + GA4事件 -->
   <script type="module">
-     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
@@ -616,6 +616,7 @@
       const provider = new OAuthProvider('oidc.line');
       try {
         await signInWithPopup(auth, provider);
+        // 登入成功後會自動觸發 onAuthStateChanged
       } catch (error) {
         alert('LINE 登入失敗：' + error.message);
       }
@@ -624,32 +625,24 @@
     // 監聽登入狀態
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // 取得 LINE userId
         const lineId = user.providerData[0].uid;
+        // 查詢 Firestore 的 whitelist
         const docRef = doc(db, "whitelist", lineId);
         const docSnap = await getDoc(docRef);
         let name = '';
         if (docSnap.exists()) {
           name = docSnap.data().name || '';
-          
-          // Google Analytics 事件追蹤
+          // Google Analytics 送出登入成功事件
           if (typeof gtag === 'function') {
-            // 登入成功事件
             gtag('event', 'login_success', {
               'user_id': lineId,
               'user_name': name
             });
-            
-            // 設定使用者屬性
-            gtag('set', 'user_properties', {
-              'employee_name': name,
-              'employee_id': lineId
-            });
           }
-          
           // 通過白名單，顯示主頁
           document.getElementById('pwbox').style.display = 'none';
           document.getElementById('maincontent').style.display = '';
-          
           // 加水印
           let displayName = user.displayName || 'LINE用戶';
           let now = new Date().toLocaleString();
@@ -662,51 +655,17 @@
           watermark.style.fontSize = '13px';
           watermark.style.zIndex = '9999';
           document.body.appendChild(watermark);
-          
-          // 修改 generate 和 ocrAndCompare 函數以加入追蹤
-          window.generate = function() {
-            const data = new FormData(document.getElementById('houseForm'));
-            let output = `${data.get('date')} 今日物件${data.get('today_obj') ? ' ' + data.get('today_obj') : ''}\n業務代租進件格式如下\n` +
-              // ... (原有的輸出格式程式碼保持不變)
-            
-            document.getElementById('output').value = output;
-            autoGrow(document.getElementById('output'));
-            
-            // 追蹤表單提交
-            if (typeof gtag === 'function') {
-              gtag('event', 'form_submit', {
-                'user_id': lineId,
-                'user_name': name,
-                'form_type': 'house_info'
-              });
-            }
-          };
-          
-          window.ocrAndCompare = async function() {
-            const file = document.getElementById('deedImg').files[0];
-            if (!file) return alert('請先上傳照片');
-            
-            // 追蹤 OCR 功能使用
-            if (typeof gtag === 'function') {
-              gtag('event', 'feature_use', {
-                'user_id': lineId,
-                'user_name': name,
-                'feature_name': 'ocr_compare'
-              });
-            }
-            
-            // ... (原有的 OCR 程式碼保持不變)
-          };
-          
         } else {
+          // 不在白名單，登出
           await signOut(auth);
           alert('此 LINE 帳號未授權使用');
         }
       } else {
+        // 尚未登入，顯示登入頁
         document.getElementById('pwbox').style.display = '';
         document.getElementById('maincontent').style.display = 'none';
       }
     });
-</script>
+  </script>
 </body>
 </html>
