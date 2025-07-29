@@ -14,7 +14,9 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
-    /* ...你的 CSS 全部照貼... */
+    /* 你的 CSS 全部照貼 */
+    body { font-family: "微軟正黑體", Arial, sans-serif; margin: 30px; }
+    /* ...以下省略，全部照你的原本內容... */
   </style>
 </head>
 <body>
@@ -32,8 +34,10 @@
   <!-- 表單內容區塊，預設隱藏 -->
   <div id="maincontent" style="display:none;">
     <h2>房屋資訊自動生成器</h2>
-    <!-- 這裡放你的主表單內容 -->
-    <!-- ...你的表單內容全部照貼... -->
+    <!-- 你的表單內容從這裡開始，全部照貼即可 -->
+    <!-- ...（此處省略，請保留你原本的表單內容）... -->
+    <!-- 你原本的表單內容全部照貼 -->
+    <!-- ...你的表單內容... -->
   </div>
   <script>
     // 密碼驗證
@@ -59,6 +63,79 @@
   </script>
   <script>
     // ...你的原本 JS 全部照貼...
+    // (此處省略，請保留你原本的 JS 內容)
+  </script>
+  <!-- 這裡是 Firebase + LINE 登入 + 白名單驗證 + 顯示 userId -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    // 你的 Firebase 設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5h8IedyM9oYt3y1VkoNkcYsAqq4yLRDk",
+      authDomain: "kaiyan-real-estate.firebaseapp.com",
+      projectId: "kaiyan-real-estate",
+      storageBucket: "kaiyan-real-estate.appspot.com",
+      messagingSenderId: "361523904560",
+      appId: "1:361523904560:web:14f12a49a1b386b51dadf5",
+      measurementId: "G-Z24BQWYZ9W"
+    };
+
+    // 初始化
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // LINE OIDC 登入
+    document.getElementById('lineLoginBtn').onclick = async function() {
+      const provider = new OAuthProvider('oidc.line');
+      try {
+        await signInWithPopup(auth, provider);
+        // 登入成功後會自動觸發 onAuthStateChanged
+      } catch (error) {
+        alert('LINE 登入失敗：' + error.message);
+      }
+    };
+
+    // 監聽登入狀態
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // 這裡加 alert 直接顯示 userId
+        alert('你的 LINE userId: ' + user.providerData[0].uid);
+
+        // 取得 LINE userId
+        const lineId = user.providerData[0].uid;
+        // 查詢 Firestore 的 whitelist
+        const docRef = doc(db, "whitelist", lineId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          // 通過白名單，顯示主頁
+          document.getElementById('pwbox').style.display = 'none';
+          document.getElementById('maincontent').style.display = '';
+          // 加水印
+          let name = user.displayName || 'LINE用戶';
+          let now = new Date().toLocaleString();
+          let watermark = document.createElement('div');
+          watermark.innerText = `${name} | ${now}`;
+          watermark.style.position = 'fixed';
+          watermark.style.bottom = '10px';
+          watermark.style.right = '10px';
+          watermark.style.opacity = '0.5';
+          watermark.style.fontSize = '13px';
+          watermark.style.zIndex = '9999';
+          document.body.appendChild(watermark);
+        } else {
+          // 不在白名單，登出
+          await signOut(auth);
+          alert('此 LINE 帳號未授權使用');
+        }
+      } else {
+        // 尚未登入，顯示登入頁
+        document.getElementById('pwbox').style.display = '';
+        document.getElementById('maincontent').style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
