@@ -4,141 +4,17 @@
   <meta charset="UTF-8">
   <title>凱燕不動產</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TG3GW6YQSK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-TG3GW6YQSK');
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
-    body { font-family: "微軟正黑體", Arial, sans-serif; margin: 30px; }
-    label { display: block; margin: 8px 0 2px; }
-    input[type="text"], select, textarea { box-sizing: border-box; font-size: 16px; }
-    input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"], textarea, select {
-      font-size: 16px !important;
-      -webkit-appearance: none !important;
-      -moz-appearance: none !important;
-      appearance: none !important;
-      -webkit-text-size-adjust: 100% !important;
-      -moz-text-size-adjust: 100% !important;
-      -ms-text-size-adjust: 100% !important;
-      text-size-adjust: 100% !important;
-      transform-origin: left top !important;
-      -webkit-transform-origin: left top !important;
-      -webkit-user-select: text !important;
-      user-select: text !important;
-      outline: none !important;
-      resize: none !important;
-    }
-    input[type="text"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="search"]:focus, input[type="tel"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
-      -webkit-transform: scale(1) !important;
-      transform: scale(1) !important;
-      zoom: 1 !important;
-      font-size: 16px !important;
-    }
-    @media screen and (max-width: 768px) {
-      input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"], textarea, select {
-        font-size: 16px !important;
-        -webkit-transform: scale(1) !important;
-        transform: scale(1) !important;
-        zoom: 1 !important;
-        max-width: none !important;
-      }
-      input[type="text"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="search"]:focus, input[type="tel"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
-        -webkit-transform: scale(1) !important;
-        transform: scale(1) !important;
-        zoom: 1 !important;
-        font-size: 16px !important;
-      }
-    }
-    input[type="radio"], input[type="checkbox"] { margin-right: 4px; margin-left: 0; vertical-align: middle; }
-    .auto-grow { min-width: 120px; width: auto; max-width: 60vw; transition: width 0.2s; }
-    .square-textarea { width: 200px; height: 200px; resize: both; font-size: 16px; box-sizing: border-box; display: block; }
-    .small-input { width: 25px !important; height: 25px; text-align: center; font-size: 14px; padding: 2px; min-width: 25px !important; max-width: 25px !important; }
-    input[type="radio"]:checked, input[type="checkbox"]:checked { accent-color: orange; }
-    textarea { margin-top: 10px; width: 100%; font-size: 18px; }
-    button { margin: 10px 5px 0 0; padding: 8px 16px; }
-    .row { display: flex; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; }
-    .row label { margin: 0 4px 0 0; font-weight: bold; display: inline-block; white-space: nowrap; }
-    .inline-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 16px;
-      align-items: center;
-    }
-    .inline-options label {
-      display: flex;
-      align-items: center;
-      margin-right: 0;
-      font-weight: normal;
-      white-space: nowrap;
-      font-size: 16px;
-    }
-    .inline-options input[type="radio"] {
-      margin-right: 4px;
-    }
-    @media (max-width: 768px) {
-      .row label {
-        min-width: auto;
-        margin-right: 2px;
-      }
-      .inline-options {
-        gap: 6px 12px;
-      }
-      .inline-options label {
-        font-size: 14px;
-      }
-    }
-    #date { width: 140px; max-width: 40vw; height: 36px; border-radius: 4px; font-size: 16px; padding: 4px 8px; margin-right: 10px; }
-    #today_obj { width: 150px; max-width: 35vw; height: 36px; border-radius: 4px; font-size: 16px; padding: 4px 8px; }
-    .ocr-section {
-      background: #f8f9fa;
-      border: 2px dashed #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      margin: 15px 0;
-      text-align: center;
-    }
-    .ocr-title { font-weight: bold; color: #333; margin-bottom: 10px; font-size: 16px; }
-    .ocr-subtitle { color: #666; font-size: 14px; margin-bottom: 10px; }
-    #deedImg { margin: 10px 0; font-size: 14px; }
-    #ocrResult { font-size:13px;color:#888;word-break:break-all; margin-top: 10px; text-align: left; max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd; }
-    .hidden { display: none; }
-    #pwbox {
-      max-width: 350px;
-      margin: 80px auto 0 auto;
-      padding: 32px 24px 24px 24px;
-      background: #f8f8f8;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px #0001;
-      text-align: center;
-    }
-    #pwbox h2 {
-      font-size: 1.6em;
-      margin-bottom: 24px;
-      letter-spacing: 2px;
-    }
-    #pwinput {
-      font-size: 20px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid #bbb;
-      margin-bottom: 12px;
-      width: 80%;
-      max-width: 220px;
-      outline: none;
-    }
-    #pwbtn {
-      font-size: 18px;
-      padding: 8px 24px;
-      border-radius: 6px;
-      border: none;
-      background: #2d7be5;
-      color: #fff;
-      cursor: pointer;
-      margin-left: 8px;
-    }
-    #pwmsg {
-      color: #d00;
-      margin-top: 10px;
-      min-height: 22px;
-      font-size: 15px;
-    }
+    /* ...你的 CSS 全部照貼... */
   </style>
 </head>
 <body>
@@ -156,10 +32,8 @@
   <!-- 表單內容區塊，預設隱藏 -->
   <div id="maincontent" style="display:none;">
     <h2>房屋資訊自動生成器</h2>
-    <!-- 你的表單內容從這裡開始，全部照貼即可 -->
-    <!-- ...（此處省略，請保留你原本的表單內容）... -->
-    <!-- 你原本的表單內容全部照貼 -->
-    <!-- ...你的表單內容... -->
+    <!-- 這裡放你的主表單內容 -->
+    <!-- ...你的表單內容全部照貼... -->
   </div>
   <script>
     // 密碼驗證
@@ -185,79 +59,6 @@
   </script>
   <script>
     // ...你的原本 JS 全部照貼...
-    // (此處省略，請保留你原本的 JS 內容)
-  </script>
-  <!-- 這裡是 Firebase + LINE 登入 + 白名單驗證 + 顯示 userId -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-    // 你的 Firebase 設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyC5h8IedyM9oYt3y1VkoNkcYsAqq4yLRDk",
-      authDomain: "kaiyan-real-estate.firebaseapp.com",
-      projectId: "kaiyan-real-estate",
-      storageBucket: "kaiyan-real-estate.appspot.com",
-      messagingSenderId: "361523904560",
-      appId: "1:361523904560:web:14f12a49a1b386b51dadf5",
-      measurementId: "G-Z24BQWYZ9W"
-    };
-
-    // 初始化
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // LINE OIDC 登入
-    document.getElementById('lineLoginBtn').onclick = async function() {
-      const provider = new OAuthProvider('oidc.line');
-      try {
-        await signInWithPopup(auth, provider);
-        // 登入成功後會自動觸發 onAuthStateChanged
-      } catch (error) {
-        alert('LINE 登入失敗：' + error.message);
-      }
-    };
-
-    // 監聽登入狀態
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // 這裡加 alert 直接顯示 userId
-        alert('你的 LINE userId: ' + user.providerData[0].uid);
-
-        // 取得 LINE userId
-        const lineId = user.providerData[0].uid;
-        // 查詢 Firestore 的 whitelist
-        const docRef = doc(db, "whitelist", lineId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          // 通過白名單，顯示主頁
-          document.getElementById('pwbox').style.display = 'none';
-          document.getElementById('maincontent').style.display = '';
-          // 加水印
-          let name = user.displayName || 'LINE用戶';
-          let now = new Date().toLocaleString();
-          let watermark = document.createElement('div');
-          watermark.innerText = `${name} | ${now}`;
-          watermark.style.position = 'fixed';
-          watermark.style.bottom = '10px';
-          watermark.style.right = '10px';
-          watermark.style.opacity = '0.5';
-          watermark.style.fontSize = '13px';
-          watermark.style.zIndex = '9999';
-          document.body.appendChild(watermark);
-        } else {
-          // 不在白名單，登出
-          await signOut(auth);
-          alert('此 LINE 帳號未授權使用');
-        }
-      } else {
-        // 尚未登入，顯示登入頁
-        document.getElementById('pwbox').style.display = '';
-        document.getElementById('maincontent').style.display = 'none';
-      }
-    });
   </script>
 </body>
 </html>
