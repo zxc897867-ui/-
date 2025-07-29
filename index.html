@@ -15,10 +15,10 @@
   </script>
   
   <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
     // Firebase 設定
     const firebaseConfig = {
@@ -35,11 +35,69 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    
-    // 將 auth 和 db 設為全域變數
-    window.auth = auth;
-    window.db = db;
-  </script>
+
+    // LINE 登入按鈕事件處理
+    document.getElementById('lineLoginBtn').addEventListener('click', async function() {
+      console.log('LINE 登入按鈕被點擊'); // 除錯用
+      try {
+        const provider = new OAuthProvider('oidc.line');
+        provider.setCustomParameters({
+          prompt: 'consent'
+        });
+        const result = await signInWithPopup(auth, provider);
+        console.log('登入成功', result); // 除錯用
+      } catch (error) {
+        console.error('LINE 登入錯誤:', error); // 除錯用
+        alert('LINE 登入失敗：' + error.message);
+      }
+    });
+
+    // 監聽登入狀態
+    onAuthStateChanged(auth, async (user) => {
+      console.log('登入狀態改變', user); // 除錯用
+      if (user) {
+        const lineId = user.providerData[0].uid;
+        const docRef = doc(db, "whitelist", lineId);
+        const docSnap = await getDoc(docRef);
+        let name = '';
+        if (docSnap.exists()) {
+          name = docSnap.data().name || '';
+          
+          // Google Analytics 事件追蹤
+          if (typeof gtag === 'function') {
+            gtag('event', 'login_success', {
+              'user_id': lineId,
+              'user_name': name
+            });
+          }
+          
+          // 通過白名單，顯示主頁
+          document.getElementById('pwbox').style.display = 'none';
+          document.getElementById('maincontent').style.display = '';
+          
+          // 加水印
+          let displayName = user.displayName || 'LINE用戶';
+          let now = new Date().toLocaleString();
+          let watermark = document.createElement('div');
+          watermark.innerText = `${displayName} | ${now}`;
+          watermark.style.position = 'fixed';
+          watermark.style.bottom = '10px';
+          watermark.style.right = '10px';
+          watermark.style.opacity = '0.5';
+          watermark.style.fontSize = '13px';
+          watermark.style.zIndex = '9999';
+          document.body.appendChild(watermark);
+        } else {
+          console.log('使用者不在白名單中'); // 除錯用
+          await signOut(auth);
+          alert('此 LINE 帳號未授權使用');
+        }
+      } else {
+        document.getElementById('pwbox').style.display = '';
+        document.getElementById('maincontent').style.display = 'none';
+      }
+    });
+</script>
   
   <!-- Tesseract.js for OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
